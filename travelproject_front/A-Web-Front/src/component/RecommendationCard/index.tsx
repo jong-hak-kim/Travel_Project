@@ -1,7 +1,43 @@
 import { Paper, Typography } from "@mui/material";
 import React from "react";
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
-export default function RecommendationCard() {
+export default function RecommendationCard(top: number) {
+  const [data, setData] = useState(null);
+  type RecommendTourspotTopList = {
+    productTitle: string;
+    productImageUrl: string;
+    productMoney: number;
+    likeyCount: number;
+  }
+
+  type Item = {
+    code: string;
+    message: string;
+    recommendTourspotTop: RecommendTourspotTopList[];
+  }
+
+  const getTop3 = async () => {
+    try {
+      const result = await axios.get(`http://localhost:4000/api/v1/main/recommend-tourist-spot-top3`);
+      setData(result.data);
+    } catch (e) {
+      console.log("오류 발생");
+    }
+
+  }
+  useEffect(() => {
+    getTop3();
+  }, []);
+
+  if (!data) return null;
+
+  var jsonData = JSON.stringify(data);
+  var parseData = JSON.parse(jsonData);
+
+  const { touristSpotTitle, recommendTouristSpotImageUrl, content} = parseData.recommendTopList[top - 1];
+
   return (
     <Paper
       variant="outlined"
@@ -11,8 +47,7 @@ export default function RecommendationCard() {
         justifyContent: "space-between",
         alignItems: "center",
         height: "300px",
-        backgroundImage:
-          "url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-Yz4upNsnJz0QoMRVjZT80FudhIYHgBhbCQ&usqp=CAU)",
+        backgroundImage: `url(${recommendTouristSpotImageUrl})`,
         backgroundSize: "cover",
         p: "5px",
       }}
@@ -20,12 +55,10 @@ export default function RecommendationCard() {
       <Typography
         sx={{ mt: "10px", fontSize: "16px", fontWeight: 900, color: "white" }}
       >
-        경복궁
+        {touristSpotTitle}
       </Typography>
       <Typography sx={{ fontSize: "8px", color: "white" }}>
-        서울특별시 종로구 사직로 161 (세종로)에 있는 조선시대의 궁궐 중 하나이자
-        조선의 정궁(법궁)이다. 사적 제117호로 지정받았다. 태조가 조선을 건국하고
-        한양 천도를 단행하면서 조선 시대에 가장 먼저 지은 궁궐이다.
+        {content}
       </Typography>
     </Paper>
   );
